@@ -3,7 +3,7 @@ import os
 import random
 import asyncio
 import threading
-from datetime import time
+from datetime import time, datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from zoneinfo import ZoneInfo
 
@@ -221,6 +221,7 @@ QUESTIONS = [
 
 # --- Логика выдачи без повторов с зацикливанием ---
 quiz_pool: list[int] = []
+_last_catchup_date = None
 
 
 def _refill_pool():
@@ -264,6 +265,18 @@ async def send_daily_quiz(context: ContextTypes.DEFAULT_TYPE):
         logger.error("Ошибка при отправке квиза: %s", e, exc_info=True)
 
 
+async def _catchup_quiz(context: ContextTypes.DEFAULT_TYPE):
+    """Разовый дослыл пропущенного квиза, но не чаще одного раза в день."""
+    global _last_catchup_date
+    today = context.job.data
+    if _last_catchup_date == today:
+        logger.info("Дослыл уже был сегодня — пропускаю")
+        return
+    _last_catchup_date = today
+    logger.info("Дослыл пропущенного квиза за %s", today)
+    await send_daily_quiz(context)
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "✅ MacroQuiz работает! Каждый день в 10:00 МСК — 5 вопросов-викторин по макроэкономике.\n\n"
@@ -304,10 +317,17 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("quiznow", quiz_now))
 
+    # Ежедневная рассылка в 10:00 МСК
     app.job_queue.run_daily(
         send_daily_quiz,
         time=time(hour=QUIZ_HOUR, minute=QUIZ_MINUTE, tzinfo=MOSCOW_TZ),
     )
+
+    # Если бот запустился ПОСЛЕ 10:00 МСК и сегодня квиз ещё не уходил — дослать через 5 сек
+    now = datetime.now(MOSCOW_TZ)
+    today_quiz_time = now.replace(hour=QUIZ_HOUR, minute=QUIZ_MINUTE, second=0, microsecond=0)
+    if now >= today_quiz_time:
+        app.job_queue.run_once(_catchup_quiz, when=5, data=now.date())
 
     logger.info("MacroQuiz запущен ✅ (%d вопросов в базе, квиз в %02d:%02d МСК)", len(QUESTIONS), QUIZ_HOUR, QUIZ_MINUTE)
     app.run_polling(drop_pending_updates=True)
