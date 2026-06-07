@@ -249,8 +249,14 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("quiznow", quiz_now))
     app.job_queue.run_daily(send_daily_quiz, time=time(hour=QUIZ_HOUR, minute=QUIZ_MINUTE, tzinfo=MOSCOW_TZ))
+
+    # При старте проверяем — если уже прошло время квиза сегодня, шлём сразу
+    from datetime import datetime
+    now = datetime.now(MOSCOW_TZ)
+    if now.hour == QUIZ_HOUR and now.minute <= 10:
+        app.job_queue.run_once(send_daily_quiz, when=5)
+    elif now.hour > QUIZ_HOUR:
+        app.job_queue.run_once(send_daily_quiz, when=5)
+
     logger.info("MacroQuiz запущен ✅")
     app.run_polling(drop_pending_updates=True)
-
-if __name__ == "__main__":
-    main()
