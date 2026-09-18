@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8857969530:AAEA9A4CxHAYNrJoIIfECl5AH2qaq7SQz44")
-GROUP_ID = -1003991696346
+GROUP_ID = "@macrobot777" 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 QUIZ_HOUR = 10
 QUIZ_MINUTE = 0
