@@ -115,7 +115,7 @@ async def send_daily_quiz(context: ContextTypes.DEFAULT_TYPE):
                 options=[opt[:100] for opt in q["options"]],
                 type="quiz",
                 correct_option_id=q["correct"],
-                is_anonymous=False,
+                is_anonymous=True,
                 explanation=q["explanation"][:200],
             )
             await asyncio.sleep(1)  # чтобы не словить flood limit
