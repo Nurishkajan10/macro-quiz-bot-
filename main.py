@@ -21,7 +21,7 @@ GROUP_ID = "@macrobot777"
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 QUIZ_HOUR = 10
 QUIZ_MINUTE = 0
-QUESTIONS_PER_DAY = 5
+QUESTIONS_PER_DAY = 10
 
 # correct — индекс правильного варианта (0=А, 1=Б, 2=В, 3=Г)
 QUESTIONS = [
@@ -105,7 +105,7 @@ async def send_daily_quiz(context: ContextTypes.DEFAULT_TYPE):
         questions = get_daily_questions()
         await context.bot.send_message(
             chat_id=GROUP_ID,
-            text="📚 Ежедневный квиз по макроэкономике — 5 вопросов 👇",
+            text="10 утра? Пора освежить мозги — отвечай на 10 вопросов по темам и готовься к проверочным и контрольной! Полный газ 👇",
         )
         for q in questions:
             # Telegram: вариант ответа ≤ 100 симв., объяснение в poll ≤ 200 симв.
