@@ -183,9 +183,11 @@ def main():
     )
 
     # Если бот запустился ПОСЛЕ 10:00 МСК и сегодня квиз ещё не уходил — дослать через 5 сек
+
     now = datetime.now(MOSCOW_TZ)
     today_quiz_time = now.replace(hour=QUIZ_HOUR, minute=QUIZ_MINUTE, second=0, microsecond=0)
-    if now >= today_quiz_time:
+    catchup_window = timedelta(minutes=15)
+    if today_quiz_time <= now <= today_quiz_time + catchup_window:
         app.job_queue.run_once(_catchup_quiz, when=5, data=now.date())
 
     logger.info("MacroQuiz запущен ✅ (%d вопросов в базе, квиз в %02d:%02d МСК)", len(QUESTIONS), QUIZ_HOUR, QUIZ_MINUTE)
